@@ -12,6 +12,7 @@ login_data = {
 session = requests.Session()
 # post the login data to the login url
 login_response = session.post(login_url, data=login_data)
+print(login_response.status_code)
 # get the url while logged in
 response = session.get(url)
 # print the response content
