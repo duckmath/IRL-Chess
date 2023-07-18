@@ -81,7 +81,7 @@ def live_loop():
 def update_board(chessboard):
     # prints chessboard by row
     os.system('cls' if os.name == 'nt' else 'clear')
-    print('\n' * 100) # temporary fix
+    print('\n' * 100)  # temporary fix
 
     print("\n")
     for row in chessboard:
@@ -92,4 +92,3 @@ if __name__ == '__main__':
     while True:
         live_loop()
         time.sleep(1)
-
