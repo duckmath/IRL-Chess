@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-
 url = "https://www.chess.com/game/9b5454d7-2584-11ee-a1b4-9d2e7001000f"
 login_url = "https://www.chess.com/login_check"
 
@@ -23,13 +22,6 @@ class Piece:
     def __str__(self):
         return f"{self.type} {self.location} is {self.color}"
 
-    class Location:
-        def __init__(self, col, row):
-            self.col = col
-            self.row = row
-
-        def __str__(self):
-            return f"col: {self.col}, row: {self.row}"
 
 
 # start a session
@@ -56,13 +48,21 @@ def live_loop():
     elements = soup.select('[class*="piece"]')
     if len(elements) == 0:
         return "No elements found"
+    # sort whole list by location[row][col], then start printing from the top left to the bottom right (0,0 to 7,7)
     for i, element in enumerate(elements):
         if i != 0:
             # gets each element's classes (each should have 3) they are a piece, what piece they are, and location
             # print(element["class"])
+            # makes white always on bottom
             color = element["class"][1]
+            if color[0] == "b":
+                newcolor = "w"+color[1]
+            else:
+                newcolor = "b"+color[1]
             location = element["class"][2].replace('square-', '')
-            item = Piece(color[1], Piece.Location(int(location[0]) - 1, int(location[1]) - 1), color[0])
+            item = Piece(newcolor[1], list((int(location[1]) - 1, int(location[0]) - 1)), newcolor[0])
+            listofpieces = []
+            #for()
             print(str(item))
             # how can I create a place to put these pieces?
             # how can I make it so that it updates the board?
