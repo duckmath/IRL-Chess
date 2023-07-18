@@ -4,7 +4,7 @@ import time
 
 example_list = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
-url = "https://www.chess.com/game/live/83361366559"
+url = "https://www.chess.com/game/9b5454d7-2584-11ee-a1b4-9d2e7001000f"
 login_url = "https://www.chess.com/login_check"
 
 login_data = {
@@ -13,8 +13,24 @@ login_data = {
     # what does the token mean?
     # may have to switch to live chess.
 }
+
+
+class Piece:
+    def __init__(self, type, location, color):
+        self.type = type
+        self.location = location
+        self.color = color
+
+    def __str__(self):
+        return f"{self.type} at {self.location} is {self.color}"
+
+
 # start a session
 session = requests.Session()
+
+
+#
+# pieces = {"pawn": "x", "rook": "r", "knight": "k", "bishop": "b", "king": "k", "queen": "q"}
 
 
 # post the login data to the login url
@@ -24,7 +40,10 @@ session = requests.Session()
 
 def live_loop():
     # get the url while logged in
+
     response = session.get(url)
+    if response.status_code != 200:
+        quit()
     # print the response content
     soup = BeautifulSoup(response.content, "html.parser")
     elements = soup.select('[class*="piece"]')
@@ -33,7 +52,11 @@ def live_loop():
     for i, element in enumerate(elements):
         if i != 0:
             # gets each element's classes (each should have 3) they are a piece, what piece they are, and location
-            print(element.get('class'))
+            # print(element["class"])
+            color = element["class"][1]
+            location = element["class"][2].replace('square-', '')
+            item = Piece(color[1], location, color[0])
+            print(str(item))
 
     return "Success"
 
@@ -42,4 +65,3 @@ if __name__ == '__main__':
     while True:
         live_loop()
         time.sleep(1)
-        break
