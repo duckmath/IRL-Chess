@@ -24,14 +24,13 @@ while True:
             grid[row][col] = ' '
 
 # Connects to lichess game
-    url = 'https://lichess.org/tq8WgAey'
+    url = 'https://lichess.org/kJN1eR0l'
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
 
 # scrapes for all piece data
     pieces = soup.select('piece')
-
 
 
     for piece in pieces:
@@ -50,7 +49,10 @@ while True:
                 row, col = position
                 int_coords = (int(row / 12.5), int(col / 12.5))
                 grid[int_coords[0]][int_coords[1]] = 'X'  
+            
 
+                print(int_coords)
+    
     draw_grid(stdscr, grid)
 
     time.sleep(0.25)
