@@ -2,57 +2,87 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
-
-url = "https://www.chess.com/game/9b5454d7-2584-11ee-a1b4-9d2e7001000f"
-login_url = "https://www.chess.com/login_check"
-
-login_data = {
-    "username": "hjbvrnwebkjhglG",
-    "_password": "Qw$DgM5u5v$T6QK"
-    # what does the token mean?
-    # may have to switch to live chess.
-}
+from urllib.parse import quote
+from classes import Piece
+from fake_useragent import UserAgent
 
 
-class Piece:
-    def __init__(self, type, location, color):
-        self.type = type
-        self.location = location
-        self.color = color
-
-    def __str__(self):
-        return f"{self.type} {self.location} is {self.color}"
+login_url = "https://www.chess.com/login_and_go?returnUrl=https://www.chess.com/game/bd1f0466-265b-11ee-ab8c-b284ac01000f"  # login
+login_post_url = "https://www.chess.com/login_check"  # login post url
+session = requests.session()  # start a session
+game_url = "https://www.chess.com/game/bd1f0466-265b-11ee-ab8c-b284ac01000f"  # current game url
 
 
-# start a session
-session = requests.Session()
+def login(current_game):
+    global token  # sets up token as a global variable
+    response = session.get(login_url, allow_redirects=True)  # gets the login url data
+    soup = BeautifulSoup(response.content, "html.parser")  # parses the html
+    token_input = soup.find('input', {'name': '_token'})  # finds the token
+    if token_input:
+        token = token_input.get('value')
+        # print("Token:", token)
+    else:
+        print("Token not found.")
 
-#
-# pieces = {"pawn": "x", "rook": "r", "knight": "k", "bishop": "b", "king": "k", "queen": "q"}
+    login_data = {"_username": "jchsfkuvdiwheorv",
+                  "_password": "Qw%24DgM5u5v%24T6QK",
+                  "login": '',
+                  "_target_path": quote(game_url),
+                  "_token": token
+                  }
+
+    data_string = "&".join([f"{key}={value}" for key, value in
+                            login_data.items()])  # formats the data into a string that can be sent to the server
+    print(data_string)
+    # login_post = session.post(login_url, data=data_string)
+    headers = {
+        "User-Agent": UserAgent().random,
+        "Referer": login_url
+    }
+
+    # Perform the login request
+    login_post = session.post(login_post_url, data=login_data, headers=headers, allow_redirects=True, verify=True)
+    print(login_post.status_code)
+    if login_post.status_code == 200:
+        print("Login failed.")
+        time.sleep(1)
+        quit()
+
+    if login_post.url == game_url:
+        print("Login successful.")
+    else:
+        print("Login failed.")
+        time.sleep(1)
+        quit()
 
 
-# post the login data to the login url
-# login_response = session.post(login_url, data=login_data)
-# print(login_response.status_code)
-
-
-chessboard = [['  ' for _ in range(8)] for _ in range(8)]
-
-
-# print(chessboard)
+login(login_url)
 
 
 def live_loop():
     # get the url while logged in
+    chessboard = [['  ' for _ in range(8)] for _ in range(8)]
 
-    response = session.get(url)
+    response = session.get(game_url, allow_redirects=True)
+    current_url = response.url
+    print("Current URL:", current_url)
     if response.status_code != 200:
+        print("error")
         quit()
+    print(response.status_code)
     # print the response content
     soup = BeautifulSoup(response.content, "html.parser")
     elements = soup.select('[class*="piece"]')
+    is_logged_in = soup.select(
+        '[class*="button auth login ui_v5-button-component ui_v5-button-primary login-modal-trigger"]')
+    print(is_logged_in.__str__())
+    # if len(is_logged_in) == 0:
+    # print("Not logged in")
+    print("source is", elements.__str__()[:100])
+
     if len(elements) == 0:
         return "No elements found"
+    print("Current URL:", current_url)
     # sort whole list by location[row][col], then start printing from the top left to the bottom right (0,0 to 7,7)
     # not going to work as I need to constantly update the board
     # make a 8x8 grid where they can move freely (0,7) is top left, (7,0) is bottom right (maybe)
@@ -81,7 +111,7 @@ def live_loop():
 def update_board(chessboard):
     # prints chessboard by row
     os.system('cls' if os.name == 'nt' else 'clear')
-    print('\n' * 100)  # temporary fix
+    # print('\n' * 100) # temporary fix
 
     print("\n")
     for row in chessboard:
@@ -92,3 +122,4 @@ if __name__ == '__main__':
     while True:
         live_loop()
         time.sleep(1)
+        break
