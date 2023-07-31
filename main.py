@@ -5,17 +5,23 @@ import os
 from urllib.parse import quote
 from classes import Piece
 from fake_useragent import UserAgent
+import json
 
 
-login_url = "https://www.chess.com/login_and_go?returnUrl=https://www.chess.com/game/bd1f0466-265b-11ee-ab8c-b284ac01000f"  # login
+
+token_url = "https://www.chess.com/login"  # login
 login_post_url = "https://www.chess.com/login_check"  # login post url
 session = requests.session()  # start a session
+with open('cookies.json', 'r') as file:
+    cookies_list = json.load(file)
+for cookie in cookies_list:
+    session.cookies.set(cookie["name"], cookie["value"])
 game_url = "https://www.chess.com/game/bd1f0466-265b-11ee-ab8c-b284ac01000f"  # current game url
 
 
 def login(current_game):
     global token  # sets up token as a global variable
-    response = session.get(login_url, allow_redirects=True)  # gets the login url data
+    response = session.get(token_url, allow_redirects=True)  # gets the login url data
     soup = BeautifulSoup(response.content, "html.parser")  # parses the html
     token_input = soup.find('input', {'name': '_token'})  # finds the token
     if token_input:
@@ -36,27 +42,25 @@ def login(current_game):
     print(data_string)
     # login_post = session.post(login_url, data=data_string)
     headers = {
-        "User-Agent": UserAgent().random,
-        "Referer": login_url
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        "Referer": token_url,
+        "Origin": "https://www.chess.com"  # Add the Origin header
     }
 
     # Perform the login request
     login_post = session.post(login_post_url, data=login_data, headers=headers, allow_redirects=True, verify=True)
     print(login_post.status_code)
     if login_post.status_code == 200:
-        print("Login failed.")
-        time.sleep(1)
-        quit()
 
-    if login_post.url == game_url:
         print("Login successful.")
+
     else:
         print("Login failed.")
         time.sleep(1)
         quit()
 
 
-login(login_url)
+#login(token_url)
 
 
 def live_loop():
@@ -75,10 +79,10 @@ def live_loop():
     elements = soup.select('[class*="piece"]')
     is_logged_in = soup.select(
         '[class*="button auth login ui_v5-button-component ui_v5-button-primary login-modal-trigger"]')
-    print(is_logged_in.__str__())
+    #print(is_logged_in.__str__())
     # if len(is_logged_in) == 0:
     # print("Not logged in")
-    print("source is", elements.__str__()[:100])
+    #print("source is", elements.__str__()[:100])
 
     if len(elements) == 0:
         return "No elements found"
@@ -122,4 +126,4 @@ if __name__ == '__main__':
     while True:
         live_loop()
         time.sleep(1)
-        break
+
